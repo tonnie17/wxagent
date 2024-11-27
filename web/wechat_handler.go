@@ -1,0 +1,128 @@
+package web
+
+import (
+	"context"
+	"encoding/xml"
+	"github.com/tonni17/wxagent/pkg/agent"
+	"github.com/tonni17/wxagent/pkg/config"
+	"github.com/tonni17/wxagent/pkg/llm"
+	"github.com/tonni17/wxagent/pkg/memory"
+	"github.com/tonni17/wxagent/pkg/tool"
+	"github.com/tonni17/wxagent/pkg/wechat"
+	"log/slog"
+	"net/http"
+	"strings"
+	"time"
+)
+
+type WechatHandler struct {
+	config   *config.Config
+	memStore *UserMemoryStore
+}
+
+func NewWechatHandler(config *config.Config, memStore *UserMemoryStore) *WechatHandler {
+	return &WechatHandler{
+		config:   config,
+		memStore: memStore,
+	}
+}
+
+func (h *WechatHandler) Receive(w http.ResponseWriter, r *http.Request) {
+	signature := r.URL.Query().Get("signature")
+	timestamp := r.URL.Query().Get("timestamp")
+	nonce := r.URL.Query().Get("nonce")
+	echoStr := r.URL.Query().Get("echostr")
+
+	if signature != wechat.Signature(h.config.WechatToken, timestamp, nonce) {
+		slog.Error("signature check failed",
+			slog.String("signature", signature),
+			slog.String("timestamp", timestamp),
+			slog.String("nonce", nonce),
+			slog.String("echostr", echoStr),
+		)
+		http.Error(w, "signature check failed", http.StatusUnauthorized)
+		return
+	}
+
+	if echoStr != "" {
+		w.Write([]byte(echoStr))
+		return
+	}
+
+	var reqMessage wechat.TextMessage
+	if err := xmlParseRequest(r.Body, &reqMessage); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	slog.Info("receive req", slog.Any("req", reqMessage))
+
+	if len(h.config.WechatAllowList) > 0 {
+		var isAllow bool
+		for _, userID := range h.config.WechatAllowList {
+			if userID == reqMessage.FromUserName {
+				isAllow = true
+				break
+			}
+		}
+		if !isAllow {
+			http.Error(w, "access denied", http.StatusUnauthorized)
+			return
+		}
+	}
+
+	mem := h.memStore.GetOrNew(reqMessage.FromUserName, func() memory.Memory {
+		return memory.NewBuffer(h.config.WechatMemMsgSize)
+	})
+
+	a := agent.NewAgent(h.config, llm.New(h.config.LLMProvider), mem, tool.GetTools(h.config.AgentTools))
+
+	input := strings.TrimSpace(reqMessage.Content)
+	result := make(chan string)
+	go func() {
+		switch reqMessage.MsgType {
+		case wechat.MsgTypeText:
+			var (
+				output string
+				err    error
+			)
+			if detectContinue(input) {
+				if output, err = a.ProcessContinue(context.Background()); output == "" {
+					output = getContinueEmptyHint()
+				}
+			} else {
+				output, err = a.Process(context.Background(), input)
+			}
+			if err != nil {
+				result <- err.Error()
+			} else {
+				result <- output
+			}
+		}
+		close(result)
+	}()
+
+	var content string
+	ticker := time.NewTicker(h.config.WechatTimeout)
+	select {
+	case <-ticker.C:
+		content = getContinueHint()
+	case content = <-result:
+	}
+
+	var respMessage wechat.TextMessage
+	respMessage.FromUserName = reqMessage.ToUserName
+	respMessage.ToUserName = reqMessage.FromUserName
+	respMessage.MsgType = reqMessage.MsgType
+	respMessage.Content = content
+	respMessage.CreateTime = time.Now().Unix()
+
+	resp, err := xml.Marshal(respMessage)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/xml")
+	w.WriteHeader(http.StatusOK)
+	w.Write(resp)
+}

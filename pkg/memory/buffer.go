@@ -1,0 +1,37 @@
+package memory
+
+import (
+	"github.com/tonni17/wxagent/pkg/llm"
+)
+
+type Buffer struct {
+	maxMessages int
+	messages    []*llm.ChatMessage
+}
+
+func NewBuffer(maxMessages int) *Buffer {
+	return &Buffer{
+		maxMessages: maxMessages,
+		messages:    []*llm.ChatMessage{},
+	}
+}
+
+func (m *Buffer) GetAllMessages() []*llm.ChatMessage {
+	return m.messages
+}
+
+func (m *Buffer) Update(messages []*llm.ChatMessage) {
+	m.messages = messages
+	m.truncate()
+}
+
+func (m *Buffer) truncate() {
+	start := 0
+	for start < len(m.messages) && len(m.messages) > m.maxMessages {
+		start++
+		for start < len(m.messages) && (m.messages[start].Role == llm.RoleTool || m.messages[start].Role == llm.RoleAssistant) {
+			start++
+		}
+		m.messages = m.messages[start:]
+	}
+}
