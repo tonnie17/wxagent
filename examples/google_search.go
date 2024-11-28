@@ -31,7 +31,7 @@ func main() {
 	tools := []tool.Tool{
 		tool.NewGoogleSearch(),
 	}
-	a := agent.NewAgent(cfg, llm.NewOpenAI(), memory.NewBuffer(6), tools)
+	a := agent.NewAgent(&cfg.AgentConfig, llm.NewOpenAI(), memory.NewBuffer(6), tools)
 	output, err := a.Process(ctx, "搜索一下法国的首都在哪里")
 	fmt.Println(output, err)
 }

@@ -29,7 +29,7 @@ func main() {
 	tools := []tool.Tool{
 		tool.NewWebPageSummary(),
 	}
-	a := agent.NewAgent(cfg, llm.NewOpenAI(), memory.NewBuffer(6), tools)
+	a := agent.NewAgent(&cfg.AgentConfig, llm.NewOpenAI(), memory.NewBuffer(6), tools)
 	output, err := a.Process(ctx, "总结一下: https://golangnote.com/golang/golang-stringsbuilder-vs-bytesbuffer")
 	fmt.Println(output, err)
 }

@@ -30,7 +30,7 @@ func main() {
 		tool.NewGetHADevices(),
 		tool.NewExecuteHADevice(),
 	}
-	a := agent.NewAgent(cfg, llm.NewOpenAI(), memory.NewBuffer(6), tools)
+	a := agent.NewAgent(&cfg.AgentConfig, llm.NewOpenAI(), memory.NewBuffer(6), tools)
 	output, err := a.Process(ctx, "打开客厅灯和厨房灯")
 	fmt.Println(output, err)
 }

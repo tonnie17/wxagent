@@ -101,7 +101,7 @@ func (h *WechatHandler) Receive(w http.ResponseWriter, r *http.Request) {
 		return memory.NewBuffer(h.config.WechatMemMsgSize)
 	})
 
-	a := agent.NewAgent(h.config, llm.New(h.config.LLMProvider), mem, tool.GetTools(h.config.AgentTools))
+	a := agent.NewAgent(&h.config.AgentConfig, llm.New(h.config.LLMProvider), mem, tool.GetTools(h.config.AgentTools))
 
 	input := strings.TrimSpace(reqMessage.Content)
 	result := make(chan string)

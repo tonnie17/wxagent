@@ -12,13 +12,13 @@ import (
 )
 
 type Agent struct {
-	config  *config.Config
+	config  *config.AgentConfig
 	llm     llm.LLM
 	history memory.Memory
 	tools   []tool.Tool
 }
 
-func NewAgent(config *config.Config, llm llm.LLM, mem memory.Memory, tools []tool.Tool) *Agent {
+func NewAgent(config *config.AgentConfig, llm llm.LLM, mem memory.Memory, tools []tool.Tool) *Agent {
 	return &Agent{
 		config:  config,
 		llm:     llm,
