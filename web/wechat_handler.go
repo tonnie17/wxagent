@@ -11,6 +11,7 @@ import (
 	"github.com/tonni17/wxagent/pkg/wechat"
 	"log/slog"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -29,6 +30,7 @@ func NewWechatHandler(config *config.Config, memStore *UserMemoryStore) *WechatH
 
 func (h *WechatHandler) Receive(w http.ResponseWriter, r *http.Request) {
 	signature := r.URL.Query().Get("signature")
+	msgSignature := r.URL.Query().Get("msg_signature")
 	timestamp := r.URL.Query().Get("timestamp")
 	nonce := r.URL.Query().Get("nonce")
 	echoStr := r.URL.Query().Get("echostr")
@@ -54,6 +56,31 @@ func (h *WechatHandler) Receive(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	if reqMessage.Encrypt != "" {
+		if msgSignature != wechat.Signature(h.config.WechatToken, timestamp, nonce, reqMessage.Encrypt) {
+			slog.Error("msg signature check failed",
+				slog.String("signature", signature),
+				slog.String("timestamp", timestamp),
+				slog.String("nonce", nonce),
+				slog.String("echostr", echoStr),
+			)
+			http.Error(w, "signature check failed", http.StatusUnauthorized)
+			return
+		}
+
+		content, err := wechat.DecryptMsg(h.config.WechatAppID, reqMessage.Encrypt, h.config.WechatEncodingAESKey)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		if err := xmlParseRequest(strings.NewReader(content), &reqMessage); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+
 	slog.Info("receive req", slog.Any("req", reqMessage))
 
 	if len(h.config.WechatAllowList) > 0 {
@@ -109,17 +136,37 @@ func (h *WechatHandler) Receive(w http.ResponseWriter, r *http.Request) {
 	case content = <-result:
 	}
 
+	now := time.Now().Unix()
 	var respMessage wechat.TextMessage
 	respMessage.FromUserName = reqMessage.ToUserName
 	respMessage.ToUserName = reqMessage.FromUserName
 	respMessage.MsgType = reqMessage.MsgType
 	respMessage.Content = content
-	respMessage.CreateTime = time.Now().Unix()
+	respMessage.CreateTime = now
 
 	resp, err := xml.Marshal(respMessage)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
+	}
+
+	if reqMessage.Encrypt != "" {
+		encrypt, err := wechat.EncryptMsg(h.config.WechatAppID, string(resp), h.config.WechatEncodingAESKey)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		encryptMessage := &wechat.EncryptMessage{
+			Encrypt:      encrypt,
+			MsgSignature: wechat.Signature(h.config.WechatToken, nonce, encrypt, strconv.FormatInt(now, 10)),
+			Timestamp:    now,
+			Nonce:        nonce,
+		}
+		resp, err = xml.Marshal(encryptMessage)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 	}
 
 	w.Header().Set("Content-Type", "application/xml")

@@ -60,7 +60,8 @@
 - `WECHAT_MEM_TTL`：公众号单轮对话记忆保存时间，默认为`5m`
 - `WECHAT_MEM_MSG_SIZE`：公众号单轮对话记忆消息记录上限（包括工具消息），默认为`6`
 - `WECHAT_TIMEOUT`：公众号单轮对话超时时间（公众号限制回复时间不能超过5秒），默认为`4s`
-
+- `WECHAT_APP_ID`：公众号 AppID，安全模式下需要指定
+- `WECHAT_ENCODING_AES_KEY`：公众号消息加解密密钥 (EncodingAESKey)，安全模式下需要指定
 
 
 ### 工具配置

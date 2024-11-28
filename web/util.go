@@ -12,7 +12,6 @@ func xmlParseRequest(body io.Reader, req interface{}) error {
 		slog.Error("body read failed", slog.Any("err", err))
 		return err
 	}
-	slog.Info("print body", slog.String("body", string(b)))
 
 	if err := xml.Unmarshal(b, &req); err != nil {
 		slog.Error("request parse failed", slog.Any("err", err))
