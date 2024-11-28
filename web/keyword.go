@@ -20,3 +20,7 @@ func getContinueHint() string {
 func getContinueEmptyHint() string {
 	return "上一轮对话结果为空，请重试对话"
 }
+
+func getProcessingHint() string {
+	return "上一轮对话正在处理中，请稍后再试"
+}

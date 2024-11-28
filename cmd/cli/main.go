@@ -30,7 +30,7 @@ func main() {
 		return
 	}
 
-	a := agent.NewAgent(cfg, llm.NewOpenAI(), memory.NewBuffer(6), tool.DefaultTools())
+	a := agent.NewAgent(&cfg.AgentConfig, llm.NewOpenAI(), memory.NewBuffer(6), tool.DefaultTools())
 	for {
 		line, err := rl.Readline()
 		if err != nil {

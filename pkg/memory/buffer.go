@@ -5,6 +5,7 @@ import (
 )
 
 type Buffer struct {
+	BaseLock
 	maxMessages int
 	messages    []*llm.ChatMessage
 }
@@ -16,7 +17,7 @@ func NewBuffer(maxMessages int) *Buffer {
 	}
 }
 
-func (m *Buffer) GetAllMessages() []*llm.ChatMessage {
+func (m *Buffer) History() []*llm.ChatMessage {
 	return m.messages
 }
 

@@ -120,7 +120,11 @@ func (h *WechatHandler) Receive(w http.ResponseWriter, r *http.Request) {
 				output, err = a.Process(context.Background(), input)
 			}
 			if err != nil {
-				result <- err.Error()
+				if err == agent.ErrMemoryInUse {
+					result <- getProcessingHint()
+				} else {
+					result <- err.Error()
+				}
 			} else {
 				result <- output
 			}

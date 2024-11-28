@@ -3,6 +3,7 @@ package agent
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	_ "github.com/joho/godotenv/autoload"
 	"github.com/tonni17/wxagent/pkg/config"
 	"github.com/tonni17/wxagent/pkg/llm"
@@ -11,19 +12,21 @@ import (
 	"log/slog"
 )
 
+var ErrMemoryInUse = errors.New("memory in use")
+
 type Agent struct {
-	config  *config.AgentConfig
-	llm     llm.LLM
-	history memory.Memory
-	tools   []tool.Tool
+	config *config.AgentConfig
+	llm    llm.LLM
+	memory memory.Memory
+	tools  []tool.Tool
 }
 
-func NewAgent(config *config.AgentConfig, llm llm.LLM, mem memory.Memory, tools []tool.Tool) *Agent {
+func NewAgent(config *config.AgentConfig, llm llm.LLM, memory memory.Memory, tools []tool.Tool) *Agent {
 	return &Agent{
-		config:  config,
-		llm:     llm,
-		history: mem,
-		tools:   tools,
+		config: config,
+		llm:    llm,
+		memory: memory,
+		tools:  tools,
 	}
 }
 
@@ -34,8 +37,16 @@ func (a *Agent) Process(ctx context.Context, input string) (string, error) {
 		ctx = timeoutCtx
 	}
 
+	if l, ok := a.memory.(memory.Lock); ok {
+		if l.Lock() {
+			defer l.Release()
+		} else {
+			return "", ErrMemoryInUse
+		}
+	}
+
 	var messages []*llm.ChatMessage
-	messages = append(messages, a.history.GetAllMessages()...)
+	messages = append(messages, a.memory.History()...)
 	messages = append(messages, &llm.ChatMessage{
 		Role:    llm.RoleUser,
 		Content: input,
@@ -102,13 +113,16 @@ func (a *Agent) Process(ctx context.Context, input string) (string, error) {
 		}
 	}
 
-	a.history.Update(messages)
+	a.memory.Update(messages)
 
 	return content, nil
 }
 
 func (a *Agent) ProcessContinue(ctx context.Context) (string, error) {
-	messages := a.history.GetAllMessages()
+	if l, ok := a.memory.(memory.Lock); ok && l.IsLocked() {
+		return "", ErrMemoryInUse
+	}
+	messages := a.memory.History()
 	for i := len(messages) - 1; i > 0; i-- {
 		msg := messages[i]
 		if msg.Role == llm.RoleAssistant {
