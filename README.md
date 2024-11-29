@@ -88,6 +88,49 @@
 - `HA_BEARER_TOKEN`：Home Assistant API 验证 Bearer Token
 
 
+## 基础使用
+
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+	"log"
+	"time"
+
+	"github.com/tonnie17/wxagent/pkg/agent"
+	"github.com/tonnie17/wxagent/pkg/config"
+	"github.com/tonnie17/wxagent/pkg/llm"
+	"github.com/tonnie17/wxagent/pkg/memory"
+	"github.com/tonnie17/wxagent/pkg/tool"
+)
+
+func main() {
+	tools := []tool.Tool{
+		tool.NewWebPageSummary(),
+	}
+
+	agent := agent.NewAgent(&config.AgentConfig{
+		AgentTools:   []string{"webpage_summary"},
+		AgentTimeout: 30 * time.Second,
+		MaxToolIter:  3,
+		ToolTimeout:  10 * time.Second,
+		Model:        "qwen-plus",
+		MaxTokens:    500,
+		Temperature:  0.95,
+		TopP:         0.5,
+	}, llm.NewOpenAI(), memory.NewBuffer(6), tools)
+
+	output, err := agent.Process(context.Background(), "总结一下：https://golangnote.com/golang/golang-stringsbuilder-vs-bytesbuffer")
+	if err != nil {
+		log.Fatalf("process failed: %v", err)
+	}
+
+	fmt.Println(output)
+}
+```
+
 ## 本地开发
 
 创建配置文件`.env`，将项目配置写入到文件：
