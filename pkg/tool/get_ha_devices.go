@@ -3,7 +3,7 @@ package tool
 import (
 	"context"
 	"fmt"
-	"github.com/tonni17/wxagent/pkg/ha"
+	"github.com/tonnie17/wxagent/pkg/ha"
 	"strings"
 )
 

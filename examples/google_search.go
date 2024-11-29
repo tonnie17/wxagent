@@ -6,11 +6,11 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/tonni17/wxagent/pkg/agent"
-	"github.com/tonni17/wxagent/pkg/config"
-	"github.com/tonni17/wxagent/pkg/llm"
-	"github.com/tonni17/wxagent/pkg/memory"
-	"github.com/tonni17/wxagent/pkg/tool"
+	"github.com/tonnie17/wxagent/pkg/agent"
+	"github.com/tonnie17/wxagent/pkg/config"
+	"github.com/tonnie17/wxagent/pkg/llm"
+	"github.com/tonnie17/wxagent/pkg/memory"
+	"github.com/tonnie17/wxagent/pkg/tool"
 	"log/slog"
 	"os"
 

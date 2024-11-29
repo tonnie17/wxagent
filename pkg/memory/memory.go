@@ -1,7 +1,7 @@
 package memory
 
 import (
-	"github.com/tonni17/wxagent/pkg/llm"
+	"github.com/tonnie17/wxagent/pkg/llm"
 	"sync"
 	"sync/atomic"
 )

@@ -3,8 +3,8 @@ package api
 import (
 	"github.com/go-chi/chi/v5"
 	_ "github.com/joho/godotenv/autoload"
-	"github.com/tonni17/wxagent/pkg/config"
-	"github.com/tonni17/wxagent/web"
+	"github.com/tonnie17/wxagent/pkg/config"
+	"github.com/tonnie17/wxagent/web"
 	"log/slog"
 	"net/http"
 	"os"

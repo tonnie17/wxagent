@@ -4,7 +4,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	slogchi "github.com/samber/slog-chi"
-	"github.com/tonni17/wxagent/pkg/config"
+	"github.com/tonnie17/wxagent/pkg/config"
 	"log/slog"
 	"time"
 )

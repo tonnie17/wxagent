@@ -1,4 +1,4 @@
-module github.com/tonni17/wxagent
+module github.com/tonnie17/wxagent
 
 go 1.21.8
 

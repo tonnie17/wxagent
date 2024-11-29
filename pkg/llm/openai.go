@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/sashabaranov/go-openai"
-	"github.com/tonni17/wxagent/pkg/tool"
+	"github.com/tonnie17/wxagent/pkg/tool"
 )
 
 type OpenAI struct {

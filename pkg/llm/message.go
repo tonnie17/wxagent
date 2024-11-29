@@ -1,6 +1,6 @@
 package llm
 
-import "github.com/tonni17/wxagent/pkg/tool"
+import "github.com/tonnie17/wxagent/pkg/tool"
 
 type Role string
 
