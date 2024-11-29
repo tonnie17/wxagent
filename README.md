@@ -8,7 +8,7 @@
 
 一键部署到 Vercel：
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Ftonnie17%2Fwxagent&env=WECHAT_TOKEN,AGENT_TOOLS,LLM_MODEL,OPENAI_API_KEY,OPENAI_BASE_URL)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Ftonnie17%2Fwxagent&env=WECHAT_TOKEN,LLM_MODEL,OPENAI_API_KEY,OPENAI_BASE_URL)
 
 绑定域名到服务器地址，然后配置公众号服务器地址为：`{domain}/wechat/receive/`
 
@@ -39,29 +39,34 @@
 所有配置通过环境变量指定，支持通过`.env`文件自动加载：
 
 - `WECHAT_TOKEN`：公众号服务器配置的令牌(Token)
-- `AGENT_TOOLS`：Agent 可以使用的 Tools，用逗号分隔，需要配置相关的环境变量，支持：
-    - `google_search`：Google 搜索
-    - `get_weather`：天气查询
-    - `webpage_summary`：网页文本总结
-    - `get_devices`：获取 Home Assistant 设备列表
-    - `execute_device`：执行 Home Assistant 设备动作
-- `LLM_PROVIDER`：LLM 提供者，支持：`openai`，默认为`openai`
-- `LLM_MODEL`：LLM 模型名称，默认为`gpt-3.5-turbo`
-- `OPENAI_API_KEY`：OpenAI（兼容接口）API KEY
-- `OPENAI_BASE_URL`：OpenAI（兼容接口）Base URL
-- `SERVER_ADDR`：服务器模式的启动地址，默认为`localhost:8082`
-- `AGENT_TIMEOUT`：Agent 对话超时时间，默认为`30s`
-- `AGENT_MAX_TOOL_ITER`：Agent 调用工具最大迭代次数，默认为`3`
-- `TOOL_TIMEOUT`：工具调用超时时间，默认为`10s`
-- `LLM_MAX_TOKENS`：最大输出 Token 数量，默认为`500`
-- `LLM_TEMPERATURE`：Temperature 参数，默认为`0.95`
-- `LLM_TOP_P`：Top P 参数，默认为`0.5`
 - `WECHAT_ALLOW_LIST`：允许交互的微信账号（openid），用逗号分隔，默认无限制
 - `WECHAT_MEM_TTL`：公众号单轮对话记忆保存时间，默认为`5m`
 - `WECHAT_MEM_MSG_SIZE`：公众号单轮对话记忆消息记录上限（包括工具消息），默认为`6`
 - `WECHAT_TIMEOUT`：公众号单轮对话超时时间（公众号限制回复时间不能超过5秒），默认为`4s`
 - `WECHAT_APP_ID`：公众号 AppID，安全模式下需要指定
 - `WECHAT_ENCODING_AES_KEY`：公众号消息加解密密钥 (EncodingAESKey)，安全模式下需要指定
+- `OPENAI_API_KEY`：OpenAI（兼容接口）API KEY
+- `OPENAI_BASE_URL`：OpenAI（兼容接口）Base URL
+- `SERVER_ADDR`：服务器模式的启动地址，默认为`0.0.0.0:8082`
+
+
+### Agent 配置
+
+- `AGENT_TOOLS`：Agent 可以使用的 Tools，用逗号分隔，需要配置相关的环境变量，支持：
+  - `google_search`：Google 搜索
+  - `get_weather`：天气查询
+  - `webpage_summary`：网页文本总结
+  - `get_devices`：获取 Home Assistant 设备列表
+  - `execute_device`：执行 Home Assistant 设备动作
+- `AGENT_TIMEOUT`：Agent 对话超时时间，默认为`30s`
+- `AGENT_MAX_TOOL_ITER`：Agent 调用工具最大迭代次数，默认为`3`
+- `TOOL_TIMEOUT`：工具调用超时时间，默认为`10s`
+- `LLM_PROVIDER`：LLM 提供者，支持：`openai`，默认为`openai`
+- `LLM_MODEL`：LLM 模型名称，默认为`gpt-3.5-turbo`
+- `LLM_MAX_TOKENS`：最大输出 Token 数量，默认为`500`
+- `LLM_TEMPERATURE`：Temperature 参数，默认为`0.95`
+- `LLM_TOP_P`：Top P 参数，默认为`0.5`
+- `SYSTEM_PROMPT`：设置 Agent 对话的 System Prompt
 
 
 ### 工具配置
@@ -72,18 +77,15 @@
 - `GOOGLE_SEARCH_API_KEY`：Google 搜索 API Key
 
 
-
 #### 天气查询（get_weather）
 
 - `OPENWEATHERMAP_API_KEY`：OpenWeatherMap API Key
-
 
 
 #### Home Assistant（get_devices，execute_device）
 
 - `HA_BASE_URL`：Home Assistant 服务器地址
 - `HA_BEARER_TOKEN`：Home Assistant API 验证 Bearer Token
-
 
 
 ## 本地开发

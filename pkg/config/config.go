@@ -27,6 +27,7 @@ type AgentConfig struct {
 	MaxTokens        int           `env:"LLM_MAX_TOKENS" envDefault:"500"`
 	Temperature      float32       `env:"LLM_TEMPERATURE" envDefault:"0.95"`
 	TopP             float32       `env:"LLM_TOP_P" envDefault:"0.5"`
+	SystemPrompt     string        `env:"SYSTEM_PROMPT"`
 }
 
 func LoadConfig() (*Config, error) {

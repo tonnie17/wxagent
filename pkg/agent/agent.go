@@ -46,6 +46,12 @@ func (a *Agent) Process(ctx context.Context, input string) (string, error) {
 	}
 
 	var messages []*llm.ChatMessage
+	if a.config.SystemPrompt != "" {
+		messages = append(messages, &llm.ChatMessage{
+			Role:    llm.RoleSystem,
+			Content: a.config.SystemPrompt,
+		})
+	}
 	messages = append(messages, a.memory.History()...)
 	messages = append(messages, &llm.ChatMessage{
 		Role:    llm.RoleUser,
