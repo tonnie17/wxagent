@@ -6,6 +6,7 @@ import (
 	slogchi "github.com/samber/slog-chi"
 	"github.com/tonnie17/wxagent/pkg/config"
 	"log/slog"
+	"net/http"
 	"time"
 )
 
@@ -18,6 +19,7 @@ func SetupRouter(r chi.Router, config *config.Config, logger *slog.Logger) {
 	memStore.CheckAndClear(time.Second)
 
 	wechatHandler := NewWechatHandler(config, memStore)
+	r.Get("/", func(w http.ResponseWriter, r *http.Request) { w.Write([]byte("OK")) })
 	r.Get("/wechat/receive", wechatHandler.Receive)
 	r.Post("/wechat/receive", wechatHandler.Receive)
 }

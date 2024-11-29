@@ -10,7 +10,9 @@
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Ftonnie17%2Fwxagent&env=WECHAT_TOKEN,LLM_MODEL,OPENAI_API_KEY,OPENAI_BASE_URL)
 
-绑定域名到服务器地址，然后配置公众号服务器地址为：`{domain}/wechat/receive/`
+1. 参考[配置](#配置)填写环境变量，完成部署
+2. 拿到Vercel生成的默认域名进行访问，没问题的话会输出`OK`
+3. 绑定域名到服务器地址，然后配置公众号服务器地址为：`{domain}/wechat/receive/`
 
 ## 示例
 
