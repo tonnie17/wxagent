@@ -1,6 +1,7 @@
 package agent
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -9,10 +10,17 @@ import (
 	"github.com/tonnie17/wxagent/pkg/llm"
 	"github.com/tonnie17/wxagent/pkg/memory"
 	"github.com/tonnie17/wxagent/pkg/tool"
+	"html/template"
 	"log/slog"
+	"time"
 )
 
-var ErrMemoryInUse = errors.New("memory in use")
+var (
+	ErrMemoryInUse = errors.New("memory in use")
+	PromptFuncMap  = template.FuncMap{
+		"now": time.Now,
+	}
+)
 
 type Agent struct {
 	config *config.AgentConfig
@@ -47,11 +55,19 @@ func (a *Agent) Process(ctx context.Context, input string) (string, error) {
 
 	var messages []*llm.ChatMessage
 	if a.config.SystemPrompt != "" {
+		systemPrompt := a.config.SystemPrompt
+		if tmp, err := template.New("systemPrompt").Funcs(PromptFuncMap).Parse(systemPrompt); err == nil {
+			promptTpl := new(bytes.Buffer)
+			if tmp.Execute(promptTpl, nil) == nil {
+				systemPrompt = promptTpl.String()
+			}
+		}
 		messages = append(messages, &llm.ChatMessage{
 			Role:    llm.RoleSystem,
-			Content: a.config.SystemPrompt,
+			Content: systemPrompt,
 		})
 	}
+
 	messages = append(messages, a.memory.History()...)
 	messages = append(messages, &llm.ChatMessage{
 		Role:    llm.RoleUser,
