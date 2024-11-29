@@ -4,7 +4,7 @@
 
 - 接近零成本部署，只需要一个域名即可绑定到公众号
 - 支持对话记忆，超时自动回复，以及对话结果回溯
-- 支持多种工具调用，包括：获取天气，关键字搜索，网页总结，Home Assitant 设备控制
+- 支持多种工具调用，包括：获取天气，关键字搜索，网页总结，Home Assistant 设备控制
 
 一键部署到 Vercel：
 
@@ -88,7 +88,9 @@
 - `HA_BEARER_TOKEN`：Home Assistant API 验证 Bearer Token
 
 
-## 基础使用
+## 扩展使用
+
+<details><summary>与Agent交互</summary>
 
 ```go
 package main
@@ -130,6 +132,43 @@ func main() {
 	fmt.Println(output)
 }
 ```
+
+</details>
+
+<details><summary>自定义工具</summary>
+
+
+要定义一个工具，需要实现`Tool`定义的接口：
+
+```go
+type Tool interface {
+	Name() string
+	Description() string
+	Schema() map[string]interface{}
+	Execute(context.Context, string) (string, error)
+}
+```
+
+方法含义：
+ - `Name()`：工具名称
+ - `Description()`：工具描述，描述尽量清晰以便模型了解选择工具进行调用
+ - `Schema() map[string]interface{}`：提供工具的参数描述以及定义
+ - `Execute(context.Context, string) (string, error)`：工具的执行逻辑，接收模型输入，返回执行结果
+
+</details>
+
+<details><summary>接入新模型</summary>
+
+
+要接入新的模型，需要实现`LLM`定义的接口：
+
+```go
+type LLM interface {
+    Chat(context.Context, model string, messages []*ChatMessage, options ...ChatOption) (*ChatMessage, error)
+}
+```
+
+</details>
 
 ## 本地开发
 

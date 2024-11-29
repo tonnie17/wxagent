@@ -3,6 +3,7 @@ package web
 import (
 	"context"
 	"encoding/xml"
+	"errors"
 	"github.com/tonnie17/wxagent/pkg/agent"
 	"github.com/tonnie17/wxagent/pkg/config"
 	"github.com/tonnie17/wxagent/pkg/llm"
@@ -120,7 +121,7 @@ func (h *WechatHandler) Receive(w http.ResponseWriter, r *http.Request) {
 				output, err = a.Process(context.Background(), input)
 			}
 			if err != nil {
-				if err == agent.ErrMemoryInUse {
+				if errors.Is(err, agent.ErrMemoryInUse) {
 					result <- getProcessingHint()
 				} else {
 					result <- err.Error()
