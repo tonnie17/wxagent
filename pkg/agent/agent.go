@@ -64,7 +64,7 @@ func (a *Agent) Process(ctx context.Context, input string) (string, error) {
 	}
 
 	var content string
-	for i := 0; i < a.config.AgentMaxToolIter; i++ {
+	for i := 0; i < a.config.MaxToolIter; i++ {
 		select {
 		case <-ctx.Done():
 			return "", ctx.Err()

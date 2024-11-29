@@ -45,6 +45,7 @@
 - `WECHAT_TIMEOUT`：公众号单轮对话超时时间（公众号限制回复时间不能超过5秒），默认为`4s`
 - `WECHAT_APP_ID`：公众号 AppID，安全模式下需要指定
 - `WECHAT_ENCODING_AES_KEY`：公众号消息加解密密钥 (EncodingAESKey)，安全模式下需要指定
+- `LLM_PROVIDER`：LLM 提供者，支持：`openai`，默认为`openai`
 - `OPENAI_API_KEY`：OpenAI（兼容接口）API KEY
 - `OPENAI_BASE_URL`：OpenAI（兼容接口）Base URL
 - `SERVER_ADDR`：服务器模式的启动地址，默认为`0.0.0.0:8082`
@@ -59,9 +60,8 @@
   - `get_devices`：获取 Home Assistant 设备列表
   - `execute_device`：执行 Home Assistant 设备动作
 - `AGENT_TIMEOUT`：Agent 对话超时时间，默认为`30s`
-- `AGENT_MAX_TOOL_ITER`：Agent 调用工具最大迭代次数，默认为`3`
+- `MAX_TOOL_ITER`：Agent 调用工具最大迭代次数，默认为`3`
 - `TOOL_TIMEOUT`：工具调用超时时间，默认为`10s`
-- `LLM_PROVIDER`：LLM 提供者，支持：`openai`，默认为`openai`
 - `LLM_MODEL`：LLM 模型名称，默认为`gpt-3.5-turbo`
 - `LLM_MAX_TOKENS`：最大输出 Token 数量，默认为`500`
 - `LLM_TEMPERATURE`：Temperature 参数，默认为`0.95`
