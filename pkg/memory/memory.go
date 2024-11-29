@@ -7,8 +7,8 @@ import (
 )
 
 type Memory interface {
-	Update(messages []*llm.ChatMessage)
-	History() []*llm.ChatMessage
+	Update(messages []*llm.ChatMessage) error
+	History() ([]*llm.ChatMessage, error)
 }
 
 type Lock interface {

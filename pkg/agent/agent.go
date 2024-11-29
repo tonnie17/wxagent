@@ -68,7 +68,12 @@ func (a *Agent) Process(ctx context.Context, input string) (string, error) {
 		})
 	}
 
-	messages = append(messages, a.memory.History()...)
+	history, err := a.memory.History()
+	if err != nil {
+		return "", err
+	}
+
+	messages = append(messages, history...)
 	messages = append(messages, &llm.ChatMessage{
 		Role:    llm.RoleUser,
 		Content: input,
@@ -144,7 +149,12 @@ func (a *Agent) ProcessContinue(ctx context.Context) (string, error) {
 	if l, ok := a.memory.(memory.Lock); ok && l.IsLocked() {
 		return "", ErrMemoryInUse
 	}
-	messages := a.memory.History()
+
+	messages, err := a.memory.History()
+	if err != nil {
+		return "", err
+	}
+
 	for i := len(messages) - 1; i > 0; i-- {
 		msg := messages[i]
 		if msg.Role == llm.RoleAssistant {

@@ -17,13 +17,14 @@ func NewBuffer(maxMessages int) *Buffer {
 	}
 }
 
-func (m *Buffer) History() []*llm.ChatMessage {
-	return m.messages
+func (m *Buffer) History() ([]*llm.ChatMessage, error) {
+	return m.messages, nil
 }
 
-func (m *Buffer) Update(messages []*llm.ChatMessage) {
+func (m *Buffer) Update(messages []*llm.ChatMessage) error {
 	m.messages = messages
 	m.truncate()
+	return nil
 }
 
 func (m *Buffer) truncate() {
