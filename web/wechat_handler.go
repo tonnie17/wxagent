@@ -8,6 +8,7 @@ import (
 	"github.com/tonnie17/wxagent/pkg/config"
 	"github.com/tonnie17/wxagent/pkg/llm"
 	"github.com/tonnie17/wxagent/pkg/memory"
+	"github.com/tonnie17/wxagent/pkg/rag"
 	"github.com/tonnie17/wxagent/pkg/tool"
 	"github.com/tonnie17/wxagent/pkg/wechat"
 	"log/slog"
@@ -18,14 +19,16 @@ import (
 )
 
 type WechatHandler struct {
-	config   *config.Config
-	memStore *UserMemoryStore
+	config    *config.Config
+	memStore  *UserMemoryStore
+	ragClient *rag.Client
 }
 
-func NewWechatHandler(config *config.Config, memStore *UserMemoryStore) *WechatHandler {
+func NewWechatHandler(config *config.Config, memStore *UserMemoryStore, ragClient *rag.Client) *WechatHandler {
 	return &WechatHandler{
-		config:   config,
-		memStore: memStore,
+		config:    config,
+		memStore:  memStore,
+		ragClient: ragClient,
 	}
 }
 
@@ -102,7 +105,7 @@ func (h *WechatHandler) Receive(w http.ResponseWriter, r *http.Request) {
 		return memory.NewBuffer(h.config.WechatMemMsgSize)
 	})
 
-	a := agent.NewAgent(&h.config.AgentConfig, llm.New(h.config.LLMProvider), mem, tool.GetTools(h.config.AgentTools))
+	a := agent.NewAgent(&h.config.AgentConfig, llm.New(h.config.LLMProvider), mem, tool.GetTools(h.config.AgentTools), h.ragClient)
 
 	input := strings.TrimSpace(reqMessage.Content)
 	result := make(chan string)

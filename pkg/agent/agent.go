@@ -9,9 +9,11 @@ import (
 	"github.com/tonnie17/wxagent/pkg/config"
 	"github.com/tonnie17/wxagent/pkg/llm"
 	"github.com/tonnie17/wxagent/pkg/memory"
+	"github.com/tonnie17/wxagent/pkg/rag"
 	"github.com/tonnie17/wxagent/pkg/tool"
 	"html/template"
 	"log/slog"
+	"strings"
 	"time"
 )
 
@@ -23,18 +25,20 @@ var (
 )
 
 type Agent struct {
-	config *config.AgentConfig
-	llm    llm.LLM
-	memory memory.Memory
-	tools  []tool.Tool
+	config    *config.AgentConfig
+	llm       llm.LLM
+	memory    memory.Memory
+	tools     []tool.Tool
+	ragClient *rag.Client
 }
 
-func NewAgent(config *config.AgentConfig, llm llm.LLM, memory memory.Memory, tools []tool.Tool) *Agent {
+func NewAgent(config *config.AgentConfig, llm llm.LLM, memory memory.Memory, tools []tool.Tool, ragClient *rag.Client) *Agent {
 	return &Agent{
-		config: config,
-		llm:    llm,
-		memory: memory,
-		tools:  tools,
+		config:    config,
+		llm:       llm,
+		memory:    memory,
+		tools:     tools,
+		ragClient: ragClient,
 	}
 }
 
@@ -43,6 +47,21 @@ func (a *Agent) Process(ctx context.Context, input string) (string, error) {
 		timeoutCtx, cancel := context.WithTimeout(ctx, a.config.AgentTimeout)
 		defer cancel()
 		ctx = timeoutCtx
+	}
+
+	if a.ragClient != nil {
+		documents, err := a.ragClient.Query(ctx, a.config.EmbeddingModel, input, 3)
+		if err != nil {
+			return "", err
+		}
+
+		if len(documents) > 0 {
+			contexts := make([]string, 0, len(documents))
+			for _, doc := range documents {
+				contexts = append(contexts, doc.Content)
+			}
+			input = rag.Prompt(strings.Join(contexts, "\n"), input)
+		}
 	}
 
 	if l, ok := a.memory.(memory.Lock); ok {

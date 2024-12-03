@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/sashabaranov/go-openai"
+	"github.com/tonnie17/wxagent/pkg/provider"
 	"github.com/tonnie17/wxagent/pkg/tool"
 )
 
@@ -12,8 +13,8 @@ type OpenAI struct {
 }
 
 func NewOpenAI() LLM {
-	openaiConfig := openai.DefaultConfig(getAPIKey("openai"))
-	openaiConfig.BaseURL = getAPIBaseURL("openai")
+	openaiConfig := openai.DefaultConfig(provider.GetAPIKey("openai"))
+	openaiConfig.BaseURL = provider.GetAPIBaseURL("openai")
 	client := openai.NewClientWithConfig(openaiConfig)
 	return &OpenAI{
 		client: client,

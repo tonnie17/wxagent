@@ -5,6 +5,8 @@ import (
 	"errors"
 	"github.com/go-chi/chi/v5"
 	"github.com/tonnie17/wxagent/pkg/config"
+	"github.com/tonnie17/wxagent/pkg/embedding"
+	"github.com/tonnie17/wxagent/pkg/rag"
 	"github.com/tonnie17/wxagent/web"
 	"log/slog"
 	"net/http"
@@ -26,8 +28,18 @@ func main() {
 		return
 	}
 
+	var ragClient *rag.Client
+	if cfg.UseRAG {
+		store, err := rag.NewPgVectorStore()
+		if err != nil {
+			slog.Error("init vector store failed", slog.Any("err", err))
+			return
+		}
+		ragClient = rag.NewClient(embedding.New(cfg.EmbeddingProvider), store)
+	}
+
 	r := chi.NewRouter()
-	web.SetupRouter(r, cfg, logger)
+	web.SetupRouter(r, cfg, logger, ragClient)
 
 	server := &http.Server{
 		Addr:    cfg.ServerAddr,

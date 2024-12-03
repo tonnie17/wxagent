@@ -2,10 +2,7 @@ package llm
 
 import (
 	"context"
-	"fmt"
 	"github.com/tonnie17/wxagent/pkg/tool"
-	"os"
-	"strings"
 )
 
 type LLM interface {
@@ -52,12 +49,4 @@ func TopP(topP float32) ChatOption {
 	return func(o *chatOptions) {
 		o.topP = topP
 	}
-}
-
-func getAPIKey(provider string) string {
-	return os.Getenv(fmt.Sprintf("%s_API_KEY", strings.ToUpper(provider)))
-}
-
-func getAPIBaseURL(provider string) string {
-	return os.Getenv(fmt.Sprintf("%s_BASE_URL", strings.ToUpper(provider)))
 }

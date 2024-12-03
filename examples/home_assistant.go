@@ -13,6 +13,8 @@ import (
 	"github.com/tonnie17/wxagent/pkg/tool"
 	"log/slog"
 	"os"
+
+	_ "github.com/joho/godotenv/autoload"
 )
 
 func main() {
@@ -30,7 +32,7 @@ func main() {
 		tool.NewGetHADevices(),
 		tool.NewExecuteHADevice(),
 	}
-	a := agent.NewAgent(&cfg.AgentConfig, llm.NewOpenAI(), memory.NewBuffer(6), tools)
+	a := agent.NewAgent(&cfg.AgentConfig, llm.NewOpenAI(), memory.NewBuffer(6), tools, nil)
 	output, err := a.Process(ctx, "打开客厅灯和厨房灯")
 	fmt.Println(output, err)
 }
