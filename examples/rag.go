@@ -36,7 +36,7 @@ func main() {
 	defer store.Release()
 
 	client := rag.NewClient(embedding.NewOpenAI(), store)
-	if err := client.BuildKnowledgeBase(context.Background(), cfg.KnowledgeBasePath, cfg.EmbeddingModel); err != nil {
+	if err := client.BuildKnowledgeBase(context.Background(), cfg.KnowledgeBasePath, cfg.EmbeddingModel, false); err != nil {
 		slog.Error("load failed", slog.Any("err", err))
 		return
 	}

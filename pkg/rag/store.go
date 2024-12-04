@@ -108,6 +108,18 @@ func (s *VectorStore) CheckDocumentExist(ctx context.Context, documentID string)
 	return exists, nil
 }
 
+func (s *VectorStore) DeleteDocuments(ctx context.Context, documentID string) error {
+	_, err := s.pool.Exec(ctx, `
+		DELETE FROM knowledge_base WHERE document_id = $1
+	`, documentID)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (s *VectorStore) Release() {
 	s.pool.Close()
 }
