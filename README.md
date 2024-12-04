@@ -5,6 +5,7 @@
 - 接近零成本部署，只需要一个域名即可绑定到公众号
 - 支持对话记忆，超时自动回复，以及对话结果回溯
 - 支持多种工具调用，包括：获取天气，关键字搜索，网页总结，Home Assistant 设备控制
+- 支持构建本地 RAG 知识库进行读取和检索
 
 一键部署到 Vercel：
 
@@ -34,6 +35,11 @@
 
 <img width="516" alt="google_search" src="https://github.com/user-attachments/assets/d7514c5c-5b05-4075-9380-a79c12ff910b">
 
+知识库检索：
+
+<img width="513" alt="knowledge_base" src="https://github.com/user-attachments/assets/7a8f1994-3d5d-43e8-9ec9-5204c1906231">
+
+
 </details>
 
 ## 配置
@@ -51,7 +57,9 @@
 - `OPENAI_API_KEY`：OpenAI（兼容接口）API KEY
 - `OPENAI_BASE_URL`：OpenAI（兼容接口）Base URL
 - `SERVER_ADDR`：服务器模式的启动地址，默认为`0.0.0.0:8082`
-
+- `USE_RAG`：是否开启 RAG 从知识库检索查询
+- `EMBEDDING_PROVIDER`：文本嵌入模型提供者，支持：`openai`，默认为 `openai`
+- `KNOWLEDGE_BASE_PATH`：本地知识库目录路径，目前支持文件格式：`txt`
 
 ### Agent 配置
 
@@ -69,6 +77,7 @@
 - `LLM_TEMPERATURE`：Temperature 参数，默认为`0.95`
 - `LLM_TOP_P`：Top P 参数，默认为`0.5`
 - `SYSTEM_PROMPT`：设置 Agent 对话的 System Prompt
+- `EMBEDDING_MODEL`：文本嵌入模型，支持：`openai`，默认为 `openai`
 
 
 ### 工具配置

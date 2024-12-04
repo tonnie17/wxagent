@@ -36,6 +36,10 @@ func main() {
 			return
 		}
 		ragClient = rag.NewClient(embedding.New(cfg.EmbeddingProvider), store)
+		if err := ragClient.LoadData(context.Background(), cfg.KnowledgeBasePath, cfg.EmbeddingModel); err != nil {
+			slog.Error("load data failed", slog.Any("err", err))
+			return
+		}
 	}
 
 	r := chi.NewRouter()

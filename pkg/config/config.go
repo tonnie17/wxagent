@@ -16,22 +16,22 @@ type Config struct {
 	WechatTimeout        time.Duration `env:"WECHAT_TIMEOUT" envDefault:"4s"`
 	LLMProvider          string        `env:"LLM_PROVIDER" envDefault:"openai"`
 	EmbeddingProvider    string        `env:"EMBEDDING_PROVIDER" envDefault:"openai"`
+	KnowledgeBasePath    string        `env:"KNOWLEDGE_BASE_PATH"`
 	UseRAG               bool          `env:"USE_RAG" envDefault:"false"`
 	AgentConfig
 }
 
 type AgentConfig struct {
-	AgentTools        []string      `env:"AGENT_TOOLS"`
-	AgentTimeout      time.Duration `env:"AGENT_TIMEOUT" envDefault:"30s"`
-	MaxToolIter       int           `env:"MAX_TOOL_ITER" envDefault:"3"`
-	ToolTimeout       time.Duration `env:"TOOL_TIMEOUT" envDefault:"10s"`
-	Model             string        `env:"LLM_MODEL" envDefault:"gpt-3.5-turbo"`
-	MaxTokens         int           `env:"LLM_MAX_TOKENS" envDefault:"500"`
-	Temperature       float32       `env:"LLM_TEMPERATURE" envDefault:"0.95"`
-	TopP              float32       `env:"LLM_TOP_P" envDefault:"0.5"`
-	SystemPrompt      string        `env:"SYSTEM_PROMPT" envDefault:"当前时间: {{now.UTC}}"`
-	EmbeddingModel    string        `env:"EMBEDDING_MODEL" envDefault:"text-embedding-ada-002"`
-	KnowledgeBasePath string        `env:"KNOWLEDGE_BASE_PATH"`
+	AgentTools     []string      `env:"AGENT_TOOLS"`
+	AgentTimeout   time.Duration `env:"AGENT_TIMEOUT" envDefault:"30s"`
+	MaxToolIter    int           `env:"MAX_TOOL_ITER" envDefault:"3"`
+	ToolTimeout    time.Duration `env:"TOOL_TIMEOUT" envDefault:"10s"`
+	Model          string        `env:"LLM_MODEL" envDefault:"gpt-3.5-turbo"`
+	MaxTokens      int           `env:"LLM_MAX_TOKENS" envDefault:"500"`
+	Temperature    float32       `env:"LLM_TEMPERATURE" envDefault:"0.95"`
+	TopP           float32       `env:"LLM_TOP_P" envDefault:"0.5"`
+	SystemPrompt   string        `env:"SYSTEM_PROMPT" envDefault:"当前时间: {{now.UTC}}"`
+	EmbeddingModel string        `env:"EMBEDDING_MODEL" envDefault:"text-embedding-ada-002"`
 }
 
 func LoadConfig() (*Config, error) {

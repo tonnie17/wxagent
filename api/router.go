@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"github.com/go-chi/chi/v5"
 	_ "github.com/joho/godotenv/autoload"
 	"github.com/tonnie17/wxagent/pkg/config"
@@ -32,6 +33,10 @@ func init() {
 			return
 		}
 		ragClient = rag.NewClient(embedding.New(cfg.EmbeddingProvider), store)
+		if err := ragClient.LoadData(context.Background(), cfg.KnowledgeBasePath, cfg.EmbeddingModel); err != nil {
+			slog.Error("load data failed", slog.Any("err", err))
+			return
+		}
 	}
 
 	router = chi.NewRouter()
