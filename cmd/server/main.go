@@ -19,7 +19,7 @@ import (
 )
 
 func main() {
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
 	slog.SetDefault(logger)
 
 	cfg, err := config.LoadConfig()
@@ -35,8 +35,10 @@ func main() {
 			slog.Error("init vector store failed", slog.Any("err", err))
 			return
 		}
+		defer store.Release()
+
 		ragClient = rag.NewClient(embedding.New(cfg.EmbeddingProvider), store)
-		if err := ragClient.LoadData(context.Background(), cfg.KnowledgeBasePath, cfg.EmbeddingModel); err != nil {
+		if err := ragClient.BuildKnowledgeBase(context.Background(), cfg.KnowledgeBasePath, cfg.EmbeddingModel); err != nil {
 			slog.Error("load data failed", slog.Any("err", err))
 			return
 		}

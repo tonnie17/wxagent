@@ -36,7 +36,7 @@ func NewPgVectorStore() (*VectorStore, error) {
 
 func (s *VectorStore) Init(ctx context.Context) error {
 	query := `
-        CREATE TABLE IF NOT EXISTS vectors (
+        CREATE TABLE IF NOT EXISTS knowledge_base (
 			id SERIAL PRIMARY KEY,
 			document_id TEXT NOT NULL,
 			part_index INT NOT NULL,
@@ -53,7 +53,7 @@ func (s *VectorStore) Init(ctx context.Context) error {
 }
 
 func (s *VectorStore) GetMostRelevantDocuments(ctx context.Context, embedding []float32, threshold float32, limit int) ([]*DocumentPart, error) {
-	query := fmt.Sprintf("SELECT document_id, part_index, content FROM vectors WHERE embedding <-> $1 < $2 ORDER BY embedding <-> $1 LIMIT %v", limit)
+	query := fmt.Sprintf("SELECT document_id, part_index, content FROM knowledge_base WHERE embedding <-> $1 < $2 ORDER BY embedding <-> $1 LIMIT %v", limit)
 	rows, err := s.pool.Query(ctx, query, pgvector.NewVector(embedding), threshold)
 	if err != nil {
 		return nil, err
@@ -78,9 +78,12 @@ func (s *VectorStore) GetMostRelevantDocuments(ctx context.Context, embedding []
 
 func (s *VectorStore) SaveDocumentEmbedding(ctx context.Context, documentID string, partIndex int, content string, embedding []float32) error {
 	_, err := s.pool.Exec(ctx, `
-		INSERT INTO vectors (document_id, part_index, content, embedding)
+		INSERT INTO knowledge_base (document_id, part_index, content, embedding)
 			VALUES ($1, $2, $3, $4)
-		ON CONFLICT (document_id, part_index) DO NOTHING;
+		ON CONFLICT (document_id, part_index)
+		DO UPDATE SET
+			content = EXCLUDED.content,
+			embedding = EXCLUDED.embedding;
 	`, documentID, partIndex, content, pgvector.NewVector(embedding))
 
 	if err != nil {
@@ -94,7 +97,7 @@ func (s *VectorStore) CheckDocumentExist(ctx context.Context, documentID string)
 	var exists bool
 	err := s.pool.QueryRow(ctx, `
 		SELECT EXISTS (
-			SELECT 1 FROM vectors WHERE document_id = $1
+			SELECT 1 FROM knowledge_base WHERE document_id = $1
 		)
 	`, documentID).Scan(&exists)
 
@@ -103,4 +106,8 @@ func (s *VectorStore) CheckDocumentExist(ctx context.Context, documentID string)
 	}
 
 	return exists, nil
+}
+
+func (s *VectorStore) Release() {
+	s.pool.Close()
 }

@@ -32,8 +32,9 @@ func init() {
 			slog.Error("init vector store failed", slog.Any("err", err))
 			return
 		}
+
 		ragClient = rag.NewClient(embedding.New(cfg.EmbeddingProvider), store)
-		if err := ragClient.LoadData(context.Background(), cfg.KnowledgeBasePath, cfg.EmbeddingModel); err != nil {
+		if err := ragClient.BuildKnowledgeBase(context.Background(), cfg.KnowledgeBasePath, cfg.EmbeddingModel); err != nil {
 			slog.Error("load data failed", slog.Any("err", err))
 			return
 		}

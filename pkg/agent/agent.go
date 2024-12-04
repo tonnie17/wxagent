@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	_ "github.com/joho/godotenv/autoload"
 	"github.com/tonnie17/wxagent/pkg/config"
 	"github.com/tonnie17/wxagent/pkg/llm"
@@ -60,7 +61,7 @@ func (a *Agent) Process(ctx context.Context, input string) (string, error) {
 			for _, doc := range documents {
 				contexts = append(contexts, doc.Content)
 			}
-			input = rag.Prompt(strings.Join(contexts, "\n"), input)
+			input = a.buildRAGPrompt(contexts, input)
 		}
 	}
 
@@ -205,4 +206,16 @@ func (a *Agent) convertToolCallMessage(toolCallID string, output string, err err
 	}
 
 	return toolMessage
+}
+
+func (a *Agent) buildRAGPrompt(contexts []string, question string) string {
+	return fmt.Sprintf(`You are an assistant. Answer the question based on the given context.
+
+Context:
+%v
+
+Question:
+%v
+
+Answer:`, strings.Join(contexts, "\n"), question)
 }

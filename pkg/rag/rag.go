@@ -2,7 +2,6 @@ package rag
 
 import (
 	"context"
-	"fmt"
 	"github.com/tonnie17/wxagent/pkg/embedding"
 	"io/fs"
 	"log/slog"
@@ -30,16 +29,24 @@ func (c *Client) Query(ctx context.Context, model string, content string, limit 
 	return c.store.GetMostRelevantDocuments(ctx, embeddingData, 1, limit)
 }
 
-func (c *Client) LoadData(ctx context.Context, dir string, model string) error {
-	if dir == "" {
+func (c *Client) BuildKnowledgeBase(ctx context.Context, knowledgeBasePath string, model string) error {
+	if knowledgeBasePath == "" {
 		return nil
 	}
-	return filepath.WalkDir(dir, func(path string, d fs.DirEntry, e error) error {
+	if err := c.store.Init(ctx); err != nil {
+		return err
+	}
+	return filepath.WalkDir(knowledgeBasePath, func(path string, d fs.DirEntry, e error) error {
 		if d != nil && d.IsDir() {
 			return nil
 		}
-		logger := slog.With(slog.String("path", path))
+		logger := slog.With(slog.String("file", path))
 		ext := filepath.Ext(path)
+		if ext != ".txt" {
+			return nil
+		}
+		logger.Info("build knowledge base")
+
 		switch ext {
 		case ".txt":
 			documentID := filepath.Base(path)
@@ -75,16 +82,4 @@ func (c *Client) LoadData(ctx context.Context, dir string, model string) error {
 
 		return nil
 	})
-}
-
-func Prompt(context string, question string) string {
-	return fmt.Sprintf(`You are an assistant. Answer the question based on the given context.
-
-Context:
-%v
-
-Question:
-%v
-
-Answer:`, context, question)
 }
