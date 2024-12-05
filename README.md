@@ -59,7 +59,7 @@
 - `SERVER_ADDR`：服务器模式的启动地址，默认为`0.0.0.0:8082`
 - `USE_RAG`：是否开启 RAG 从知识库检索查询
 - `EMBEDDING_PROVIDER`：文本嵌入模型提供者，支持：`openai`，默认为 `openai`
-- `KNOWLEDGE_BASE_PATH`：本地知识库目录路径，目前支持文件格式：`txt`
+- `KNOWLEDGE_BASE_PATH`：本地知识库目录路径，目前支持文件格式：`txt`，默认为 `./knowledge_base`
 
 ### Agent 配置
 

@@ -15,9 +15,9 @@ type Config struct {
 	WechatMemMsgSize     int           `env:"WECHAT_MEM_MSG_SIZE" envDefault:"6"`
 	WechatTimeout        time.Duration `env:"WECHAT_TIMEOUT" envDefault:"4s"`
 	LLMProvider          string        `env:"LLM_PROVIDER" envDefault:"openai"`
-	EmbeddingProvider    string        `env:"EMBEDDING_PROVIDER" envDefault:"openai"`
-	KnowledgeBasePath    string        `env:"KNOWLEDGE_BASE_PATH"`
 	UseRAG               bool          `env:"USE_RAG" envDefault:"false"`
+	EmbeddingProvider    string        `env:"EMBEDDING_PROVIDER" envDefault:"openai"`
+	KnowledgeBasePath    string        `env:"KNOWLEDGE_BASE_PATH" envDefault:"./knowledge_base"`
 	AgentConfig
 }
 
