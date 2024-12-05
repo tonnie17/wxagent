@@ -133,7 +133,7 @@ func main() {
 		MaxTokens:    500,
 		Temperature:  0.95,
 		TopP:         0.5,
-	}, llm.NewOpenAI(), memory.NewBuffer(6), tools)
+	}, llm.NewOpenAI(), memory.NewBuffer(6), tools, nil)
 
 	output, err := agent.Process(context.Background(), "总结一下：https://golangnote.com/golang/golang-stringsbuilder-vs-bytesbuffer")
 	if err != nil {
