@@ -74,8 +74,8 @@
 - `TOOL_TIMEOUT`：工具调用超时时间，默认为`10s`
 - `LLM_MODEL`：LLM 模型名称，默认为`gpt-3.5-turbo`
 - `LLM_MAX_TOKENS`：最大输出 Token 数量，默认为`500`
-- `LLM_TEMPERATURE`：Temperature 参数，默认为`0.95`
-- `LLM_TOP_P`：Top P 参数，默认为`0.5`
+- `LLM_TEMPERATURE`：Temperature 参数，默认为`0.2`
+- `LLM_TOP_P`：Top P 参数，默认为`0.9`
 - `SYSTEM_PROMPT`：设置 Agent 对话的 System Prompt
 - `EMBEDDING_MODEL`：文本嵌入模型，支持：`openai`，默认为 `openai`
 
@@ -131,13 +131,13 @@ func main() {
 		ToolTimeout:  10 * time.Second,
 		Model:        "qwen-plus",
 		MaxTokens:    500,
-		Temperature:  0.95,
-		TopP:         0.5,
+		Temperature:  0.2,
+		TopP:         0.9,
 	}, llm.NewOpenAI(), memory.NewBuffer(6), tools, nil)
 
-	output, err := agent.Process(context.Background(), "总结一下：https://golangnote.com/golang/golang-stringsbuilder-vs-bytesbuffer")
+	output, err := agent.Chat(context.Background(), "总结一下：https://golangnote.com/golang/golang-stringsbuilder-vs-bytesbuffer")
 	if err != nil {
-		log.Fatalf("process failed: %v", err)
+		log.Fatalf("chat failed: %v", err)
 	}
 
 	fmt.Println(output)

@@ -33,6 +33,6 @@ func main() {
 		tool.NewExecuteHADevice(),
 	}
 	a := agent.NewAgent(&cfg.AgentConfig, llm.NewOpenAI(), memory.NewBuffer(6), tools, nil)
-	output, err := a.Process(ctx, "打开客厅灯和厨房灯")
+	output, err := a.Chat(ctx, "打开客厅灯和厨房灯")
 	fmt.Println(output, err)
 }

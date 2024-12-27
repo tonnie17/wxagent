@@ -32,8 +32,8 @@ func main() {
 		tool.NewGetWeather(),
 	}
 	a := agent.NewAgent(&cfg.AgentConfig, llm.NewOpenAI(), memory.NewBuffer(6), tools, nil)
-	output, err := a.Process(ctx, "天气怎么样")
+	output, err := a.Chat(ctx, "天气怎么样")
 	fmt.Println(output, err)
-	output, err = a.Process(ctx, "深圳")
+	output, err = a.Chat(ctx, "深圳")
 	fmt.Println(output, err)
 }

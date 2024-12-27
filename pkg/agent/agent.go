@@ -43,17 +43,48 @@ func NewAgent(config *config.AgentConfig, llm llm.LLM, memory memory.Memory, too
 	}
 }
 
-func (a *Agent) Process(ctx context.Context, input string) (string, error) {
+func (a *Agent) Chat(ctx context.Context, input string) (string, error) {
+	msg, err := a.Process(ctx, &llm.ChatMessage{
+		Role:    llm.RoleUser,
+		Content: input,
+	})
+	if err != nil {
+		return "", err
+	}
+
+	return msg.Content, nil
+}
+
+func (a *Agent) ChatContinue(ctx context.Context) (string, error) {
+	if l, ok := a.memory.(memory.Lock); ok && l.IsLocked() {
+		return "", ErrMemoryInUse
+	}
+
+	messages, err := a.memory.History()
+	if err != nil {
+		return "", err
+	}
+
+	for i := len(messages) - 1; i > 0; i-- {
+		msg := messages[i]
+		if msg.Role == llm.RoleAssistant {
+			return msg.Content, nil
+		}
+	}
+	return "", nil
+}
+
+func (a *Agent) Process(ctx context.Context, message *llm.ChatMessage) (*llm.ChatMessage, error) {
 	if a.config.AgentTimeout != 0 {
 		timeoutCtx, cancel := context.WithTimeout(ctx, a.config.AgentTimeout)
 		defer cancel()
 		ctx = timeoutCtx
 	}
 
-	if a.ragClient != nil {
-		documents, err := a.ragClient.Query(ctx, a.config.EmbeddingModel, input, 3)
+	if a.ragClient != nil && message != nil {
+		documents, err := a.ragClient.Query(ctx, a.config.EmbeddingModel, message.Content, 3)
 		if err != nil {
-			return "", err
+			return nil, err
 		}
 
 		if len(documents) > 0 {
@@ -61,7 +92,7 @@ func (a *Agent) Process(ctx context.Context, input string) (string, error) {
 			for _, doc := range documents {
 				contexts = append(contexts, doc.Content)
 			}
-			input = a.buildRAGPrompt(contexts, input)
+			message.Content = a.buildRAGPrompt(contexts, message.Content)
 		}
 	}
 
@@ -69,7 +100,7 @@ func (a *Agent) Process(ctx context.Context, input string) (string, error) {
 		if l.Lock() {
 			defer l.Release()
 		} else {
-			return "", ErrMemoryInUse
+			return nil, ErrMemoryInUse
 		}
 	}
 
@@ -90,30 +121,30 @@ func (a *Agent) Process(ctx context.Context, input string) (string, error) {
 
 	history, err := a.memory.History()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	messages = append(messages, history...)
-	messages = append(messages, &llm.ChatMessage{
-		Role:    llm.RoleUser,
-		Content: input,
-	})
+	if message != nil {
+		messages = append(messages, message)
+	}
 
 	toolsMap := make(map[string]tool.Tool, len(a.tools))
 	for _, t := range a.tools {
 		toolsMap[t.Name()] = t
 	}
 
-	var content string
+	var msg *llm.ChatMessage
+	var toolCalls []*tool.Call
 	for i := 0; i < a.config.MaxToolIter; i++ {
 		select {
 		case <-ctx.Done():
-			return "", ctx.Err()
+			return nil, ctx.Err()
 		default:
 		}
 
 		slog.Debug("chat input", slog.String("model", a.config.Model), slog.Any("messages", messages), slog.Any("tools", a.tools))
-		msg, err := a.llm.Chat(ctx, a.config.Model, messages,
+		msg, err = a.llm.Chat(ctx, a.config.Model, messages,
 			llm.Tools(a.tools),
 			llm.MaxTokens(a.config.MaxTokens),
 			llm.Temperature(a.config.Temperature),
@@ -121,14 +152,13 @@ func (a *Agent) Process(ctx context.Context, input string) (string, error) {
 		)
 		if err != nil {
 			slog.Debug("chat error", slog.Any("err", err))
-			return "", err
+			return nil, err
 		}
 		slog.Debug("chat output", slog.Any("result", msg))
 
 		messages = append(messages, msg)
 
 		if len(msg.ToolCalls) == 0 {
-			content = msg.Content
 			break
 		}
 
@@ -138,6 +168,7 @@ func (a *Agent) Process(ctx context.Context, input string) (string, error) {
 				slog.Error("tool not exist", slog.String("tool_call_id", toolCall.ID))
 				continue
 			}
+			toolCalls = append(toolCalls, toolCall)
 
 			var (
 				toolCtx       = ctx
@@ -162,26 +193,10 @@ func (a *Agent) Process(ctx context.Context, input string) (string, error) {
 
 	a.memory.Update(messages)
 
-	return content, nil
-}
+	res := *msg
+	res.ToolCalls = toolCalls
 
-func (a *Agent) ProcessContinue(ctx context.Context) (string, error) {
-	if l, ok := a.memory.(memory.Lock); ok && l.IsLocked() {
-		return "", ErrMemoryInUse
-	}
-
-	messages, err := a.memory.History()
-	if err != nil {
-		return "", err
-	}
-
-	for i := len(messages) - 1; i > 0; i-- {
-		msg := messages[i]
-		if msg.Role == llm.RoleAssistant {
-			return msg.Content, nil
-		}
-	}
-	return "", nil
+	return &res, nil
 }
 
 func (a *Agent) convertToolCallMessage(toolCallID string, output string, err error) *llm.ChatMessage {

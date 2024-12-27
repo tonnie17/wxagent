@@ -41,7 +41,7 @@ func (m *TokenBase) Update(messages []*llm.ChatMessage) error {
 
 func (m *TokenBase) truncate() {
 	start := 0
-	for start < len(m.messages) && m.getMessageTokens(m.messages) > m.maxTokens {
+	for start < len(m.messages) && m.maxTokens > 0 && m.getMessageTokens(m.messages) > m.maxTokens {
 		start++
 		for start < len(m.messages) && (m.messages[start].Role == llm.RoleTool || m.messages[start].Role == llm.RoleAssistant) {
 			start++

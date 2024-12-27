@@ -42,6 +42,6 @@ func main() {
 	}
 
 	a := agent.NewAgent(&cfg.AgentConfig, llm.NewOpenAI(), memory.NewBuffer(6), nil, client)
-	output, err := a.Process(context.Background(), "摩洛哥的公路有多少公里")
+	output, err := a.Chat(context.Background(), "摩洛哥的公路有多少公里")
 	fmt.Println(output, err)
 }

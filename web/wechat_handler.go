@@ -117,11 +117,11 @@ func (h *WechatHandler) Receive(w http.ResponseWriter, r *http.Request) {
 				err    error
 			)
 			if detectContinue(input) {
-				if output, err = a.ProcessContinue(context.Background()); output == "" {
+				if output, err = a.ChatContinue(context.Background()); output == "" {
 					output = getContinueEmptyHint()
 				}
 			} else {
-				output, err = a.Process(context.Background(), input)
+				output, err = a.Chat(context.Background(), input)
 			}
 			if err != nil {
 				if errors.Is(err, agent.ErrMemoryInUse) {

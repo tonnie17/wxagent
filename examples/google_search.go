@@ -32,6 +32,6 @@ func main() {
 		tool.NewGoogleSearch(),
 	}
 	a := agent.NewAgent(&cfg.AgentConfig, llm.NewOpenAI(), memory.NewBuffer(6), tools, nil)
-	output, err := a.Process(ctx, "搜索一下法国的首都在哪里")
+	output, err := a.Chat(ctx, "搜索一下法国的首都在哪里")
 	fmt.Println(output, err)
 }

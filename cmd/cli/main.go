@@ -39,7 +39,7 @@ func main() {
 
 		input := strings.TrimSpace(line)
 
-		output, err := a.Process(context.Background(), input)
+		output, err := a.Chat(context.Background(), input)
 		if err != nil {
 			log.Fatalln(err)
 		}
