@@ -56,7 +56,7 @@ func (w *GetWeather) Execute(ctx context.Context, input string) (string, error) 
 	city := w.completeCNCity(arguments.City)
 
 	appID := os.Getenv("OPENWEATHERMAP_API_KEY")
-	apiURL := fmt.Sprintf("https://api.openweathermap.org/data/2.5/weather?q=%v&units=metric&appid=%v&lang=zh_cn", city, appID)
+	apiURL := fmt.Sprintf("https://api.openweathermap.org/data/2.5/forecast?q=%v&units=metric&appid=%v&lang=zh_cn&cnt=5", city, appID)
 
 	req, err := http.NewRequest("GET", apiURL, nil)
 	if err != nil {
@@ -76,16 +76,33 @@ func (w *GetWeather) Execute(ctx context.Context, input string) (string, error) 
 		return "", err
 	}
 
-	contentJSON := make(map[string]interface{})
-	if err := json.Unmarshal(content, &contentJSON); err != nil {
+	var weatherData struct {
+		List []struct {
+			Dt   int `json:"dt"`
+			Main struct {
+				Temp float64 `json:"temp"`
+			} `json:"main"`
+			Weather []struct {
+				Description string `json:"description"`
+			} `json:"weather"`
+			DtTxt string `json:"dt_txt"`
+		} `json:"list"`
+		City struct {
+			Name  string `json:"name"`
+			Coord struct {
+				Lat float64 `json:"lat"`
+				Lon float64 `json:"lon"`
+			} `json:"coord"`
+			Sunrise int `json:"sunrise"`
+			Sunset  int `json:"sunset"`
+		} `json:"city"`
+	}
+
+	if err := json.Unmarshal(content, &weatherData); err != nil {
 		return "", err
 	}
 
-	main, ok := contentJSON["main"].(map[string]interface{})
-	if !ok {
-		return "", fmt.Errorf("main section not exist")
-	}
-	mainContent, _ := json.Marshal(main)
+	mainContent, _ := json.Marshal(weatherData)
 
 	return string(mainContent), nil
 }

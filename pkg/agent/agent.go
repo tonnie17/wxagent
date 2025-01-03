@@ -209,7 +209,7 @@ func (a *Agent) ProcessStream(ctx context.Context, message *llm.ChatMessage, out
 				slog.Error("tool call function execute failed", slog.String("tool_call_id", toolCall.ID), slog.Any("err", err))
 			}
 
-			toolResponse := a.convertToolCallMessage(toolCall.ID, output, err)
+			toolResponse := a.convertToolCallMessage(toolCall, output, err)
 			messages = append(messages, toolResponse)
 
 			select {
@@ -224,7 +224,7 @@ func (a *Agent) ProcessStream(ctx context.Context, message *llm.ChatMessage, out
 	return nil
 }
 
-func (a *Agent) convertToolCallMessage(toolCallID string, output string, err error) *llm.ChatMessage {
+func (a *Agent) convertToolCallMessage(toolCall *tool.Call, output string, err error) *llm.ChatMessage {
 	status := "success"
 	if err != nil {
 		status = "failed"
@@ -234,15 +234,17 @@ func (a *Agent) convertToolCallMessage(toolCallID string, output string, err err
 	content, _ := json.Marshal(struct {
 		Status string `json:"status"`
 		Output string `json:"output"`
+		Name   string `json:"name"`
 	}{
 		Status: status,
 		Output: output,
+		Name:   toolCall.Name,
 	})
 
 	toolMessage := &llm.ChatMessage{
 		Role:       llm.RoleTool,
 		Content:    string(content),
-		ToolCallID: toolCallID,
+		ToolCallID: toolCall.ID,
 	}
 
 	return toolMessage

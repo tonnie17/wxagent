@@ -207,6 +207,21 @@ go run cmd/server/main.go
 go run cmd/cli/main.go
 ```
 
+Streamlit 调用：
+
+```python
+with httpx.stream("POST", server_addr, headers=headers, data=json.dumps({
+    "messages": st.session_state.messages
+}), timeout=30) as r:
+    for line in r.iter_lines():
+        if not line.strip():
+            continue
+        data = json.loads(line)
+        # ...
+```
+
+<img src="agent.gif" width="500"/>
+
 ## 构建
 
 ### 本地构建
