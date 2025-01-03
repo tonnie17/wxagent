@@ -75,6 +75,25 @@ func (a *Agent) ChatContinue(ctx context.Context) (string, error) {
 }
 
 func (a *Agent) Process(ctx context.Context, message *llm.ChatMessage) (*llm.ChatMessage, error) {
+	var err error
+	out := make(chan *llm.ChatMessage)
+	go func() {
+		if err = a.ProcessStream(ctx, message, out); err != nil {
+			return
+		}
+	}()
+
+	var res *llm.ChatMessage
+	for msg := range out {
+		res = msg
+	}
+
+	return res, err
+}
+
+func (a *Agent) ProcessStream(ctx context.Context, message *llm.ChatMessage, outputChan chan<- *llm.ChatMessage) error {
+	defer close(outputChan)
+
 	if a.config.AgentTimeout != 0 {
 		timeoutCtx, cancel := context.WithTimeout(ctx, a.config.AgentTimeout)
 		defer cancel()
@@ -84,7 +103,7 @@ func (a *Agent) Process(ctx context.Context, message *llm.ChatMessage) (*llm.Cha
 	if a.ragClient != nil && message != nil {
 		documents, err := a.ragClient.Query(ctx, a.config.EmbeddingModel, message.Content, 3)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		if len(documents) > 0 {
@@ -100,7 +119,7 @@ func (a *Agent) Process(ctx context.Context, message *llm.ChatMessage) (*llm.Cha
 		if l.Lock() {
 			defer l.Release()
 		} else {
-			return nil, ErrMemoryInUse
+			return ErrMemoryInUse
 		}
 	}
 
@@ -121,7 +140,7 @@ func (a *Agent) Process(ctx context.Context, message *llm.ChatMessage) (*llm.Cha
 
 	history, err := a.memory.History()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	messages = append(messages, history...)
@@ -134,17 +153,15 @@ func (a *Agent) Process(ctx context.Context, message *llm.ChatMessage) (*llm.Cha
 		toolsMap[t.Name()] = t
 	}
 
-	var msg *llm.ChatMessage
-	var toolCalls []*tool.Call
 	for i := 0; i < a.config.MaxToolIter; i++ {
 		select {
 		case <-ctx.Done():
-			return nil, ctx.Err()
+			return ctx.Err()
 		default:
 		}
 
 		slog.Debug("chat input", slog.String("model", a.config.Model), slog.Any("messages", messages), slog.Any("tools", a.tools))
-		msg, err = a.llm.Chat(ctx, a.config.Model, messages,
+		msg, err := a.llm.Chat(ctx, a.config.Model, messages,
 			llm.Tools(a.tools),
 			llm.MaxTokens(a.config.MaxTokens),
 			llm.Temperature(a.config.Temperature),
@@ -152,9 +169,15 @@ func (a *Agent) Process(ctx context.Context, message *llm.ChatMessage) (*llm.Cha
 		)
 		if err != nil {
 			slog.Debug("chat error", slog.Any("err", err))
-			return nil, err
+			return err
 		}
 		slog.Debug("chat output", slog.Any("result", msg))
+
+		select {
+		case outputChan <- msg:
+		case <-ctx.Done():
+			return ctx.Err()
+		}
 
 		messages = append(messages, msg)
 
@@ -168,7 +191,6 @@ func (a *Agent) Process(ctx context.Context, message *llm.ChatMessage) (*llm.Cha
 				slog.Error("tool not exist", slog.String("tool_call_id", toolCall.ID))
 				continue
 			}
-			toolCalls = append(toolCalls, toolCall)
 
 			var (
 				toolCtx       = ctx
@@ -179,24 +201,27 @@ func (a *Agent) Process(ctx context.Context, message *llm.ChatMessage) (*llm.Cha
 			}
 
 			output, err := t.Execute(toolCtx, toolCall.Arguments)
-			if err != nil {
-				slog.Error("tool call function execute failed", slog.String("tool_call_id", toolCall.ID), slog.Any("err", err))
-			}
-
 			if toolCtxCancel != nil {
 				toolCtxCancel()
 			}
 
-			messages = append(messages, a.convertToolCallMessage(toolCall.ID, output, err))
+			if err != nil {
+				slog.Error("tool call function execute failed", slog.String("tool_call_id", toolCall.ID), slog.Any("err", err))
+			}
+
+			toolResponse := a.convertToolCallMessage(toolCall.ID, output, err)
+			messages = append(messages, toolResponse)
+
+			select {
+			case outputChan <- toolResponse:
+			case <-ctx.Done():
+				return ctx.Err()
+			}
 		}
 	}
 
 	a.memory.Update(messages)
-
-	res := *msg
-	res.ToolCalls = toolCalls
-
-	return &res, nil
+	return nil
 }
 
 func (a *Agent) convertToolCallMessage(toolCallID string, output string, err error) *llm.ChatMessage {

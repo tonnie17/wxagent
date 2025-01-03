@@ -26,7 +26,7 @@ func SetupRouter(r chi.Router, config *config.Config, logger *slog.Logger, ragCl
 	r.Post("/wechat/receive", wechatHandler.Receive)
 
 	chatHandler := NewChatHandler(config, ragClient)
-	r.With(apiKeyAuth(config.ChatAPIKEY)).Post("/chat/completions", chatHandler.Completions)
+	r.With(apiKeyAuth(config.ChatAPIKEY)).Post("/chat/stream", chatHandler.Stream)
 }
 
 func apiKeyAuth(apiKey string) func(http.Handler) http.Handler {
